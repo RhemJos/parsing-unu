@@ -2,8 +2,6 @@
 import json
 import re
 
-from main import save_output
-
 
 class Parser:
     """Parser class implementation."""
@@ -18,7 +16,8 @@ class Parser:
 
     def create_output_name(self):
         """Create the name for the output file."""
-        self.output_file = '_'.join(self.input_file.split("_")[0:-1]) + '_002.json'
+        file_name = '_'.join(self.input_file.split("_")[0:-1]) + '_002.json'
+        self.output_file = file_name
 
     def save_output(self, records: list[dict]) -> None:
         """Save the output records in a JSON file with the specified structure.
@@ -40,45 +39,45 @@ class Parser:
 
     def clean_text(self, text: str) -> str:
         """Clean line breaks and blank spaces. It returns an string.
-        
+
         Parameters
         ----------
         text : str  Text to be cleaned.
 
         """
         return " ".join(text.replace("\n", " ").split())
-    
+
     def normalize_for_match(self, text: str) -> str:
         """Normalize text to compare. It returns an string.
-        
+
         Parameters
         ----------
         text : str  Text to be normalized.
         """
         return " ".join(text.upper().split())
-    
+
     def is_inid(self, text: str) -> bool:
-        """Verify if the text is an INID code of three digits. It returns a boolean.
-        
+        """Verify if the text is an INID code of three digits.
+            It returns a boolean.
         Parameters
         ----------
         text : str  Text to be checked.
         """
         return bool(re.fullmatch(r"\d{3}", text))
-    
+
     def assign_column(self, x0: float, threshold: float = 300) -> int:
         """Set 1 or 2 according to its column. It returns an integer.
 
         Parameters
         ----------
         x0 : float  X coordinate of the text line.
-        threshold : float    Column threshold to assign column 1 or 2. Default is 300. 
+        threshold : float    Threshold to assign column 1 or 2. Default is 300.
         """
         return 1 if x0 < threshold else 2
-    
+
     def is_noise_block(self, text: str, top: float) -> bool:
-        """Detect noise blocks based on content and position. It returns a boolean.
-        
+        """Detect noise blocks based on content and position.
+            It returns a boolean.
         Parameters
         ----------
         text : str  Text to be checked.
@@ -93,7 +92,7 @@ class Parser:
         if tu.startswith("PART B.1") or tu.startswith("PART B.2"):
             return False
 
-        if re.fullmatch(r"\d{4}/\d{3}", t): 
+        if re.fullmatch(r"\d{4}/\d{3}", t):
             return True
 
         if t.startswith("EUTM"):
@@ -167,7 +166,8 @@ class Parser:
         return "B.2." in t or "PART C" in t or "C.1." in t
 
     def load_blocks(self, json_path: str) -> list[dict]:
-        """Load all useful text blocks from the JSON file. It returns a list of dictionaries.
+        """Load all useful text blocks from the JSON file.
+            It returns a list of dictionaries.
         Parameters
         ----------
         json_path : str  Path to the JSON file to be parsed.
@@ -199,22 +199,26 @@ class Parser:
                 })
 
         return blocks
-    
+
     def sort_blocks(self, blocks: list[dict]) -> list[dict]:
-        """Order blocks by page, column, top and x0. It returns a list of dictionaries.
-        
+        """Order blocks by page, column, top and x0.
+            It returns a list of dictionaries.
         Parameters
         ----------
         blocks : list[dict]   List of text blocks to be sorted.
         """
-        return sorted(blocks, key=lambda b: (b["page"], b["column"], b["top"], b["x0"]))
+        return sorted(blocks, key=lambda b: (
+                                            b["page"], b["column"],
+                                            b["top"], b["x0"]))
 
-    def group_blocks_into_lines(self, blocks: list[dict], tolerance: float = 1.0) -> list[dict]:
-        """Group blocks that are close vertically as the same line. It returns a list[dict]
+    def group_blocks_into_lines(self, blocks: list[dict],
+                                tolerance: float = 1.0) -> list[dict]:
+        """Group blocks that are close vertically as the same line.
+            It returns a list[dict]
         Parameters
         ----------
         blocks : list[dict]   List of text blocks to be grouped into lines.
-        tolerance : float    Vertical distance to consider blocks in the same line. Default is 1.
+        tolerance : float    Vertical distance to consider the same line.
         """
         lines = []
 
@@ -251,7 +255,8 @@ class Parser:
         return parsed_lines
 
     def filter_section_b1(self, lines: list[dict]) -> list[dict]:
-        """Filter only the lines belonging to section B.1. It returns a list of dictionaries.
+        """Filter only the lines belonging to section B.1.
+            It returns a list of dictionaries.
         Parameters
         ----------
         lines : list[dict]   List of text lines to be filtered.
@@ -275,7 +280,8 @@ class Parser:
         return filtered
 
     def parse_line(self, line: dict) -> tuple[str | None, str]:
-        """Verify if the line starts with an INID code and extract its value. It returns a tuple.
+        """Verify if the line starts with an INID code and extract its value.
+            It returns a tuple.
         Parameters
         ----------
         line : dict    Line to be parsed.
@@ -292,9 +298,10 @@ class Parser:
             return first_text, value
 
         return None, line["text"].strip()
-    
+
     def build_records(self, lines: list[dict]) -> list[dict]:
-        """Build structured records from the lines. It returns a list of dictionaries.
+        """Build structured records from the lines.
+            It returns a list of dictionaries.
         Parameters
         ----------
         lines : list[dict]   List of text lines to be processed.
@@ -348,7 +355,8 @@ class Parser:
         return records
 
     def normalize_records(self, records: list[dict]) -> list[dict]:
-        """Normalize records to have a consistent output format. It returns a list of dictionaries.
+        """Normalize records to have a consistent output format.
+            It returns a list of dictionaries.
         Parameters
         ----------
         records : list[dict]   List of records to be normalized.
@@ -364,20 +372,21 @@ class Parser:
 
                 if key == "400":
                     if isinstance(value, list):
-                        clean_record[key] = [str(v).strip() for v in value if str(v).strip()]
+                        clean_record[key] = [
+                            str(v).strip() for v in value if str(v).strip()]
                     else:
-                        clean_record[key] = [str(value).strip()] if str(value).strip() else []
+                        clean_record[key] = [
+                            str(value).strip()] if str(value).strip() else []
                 else:
                     clean_record[key] = str(value).strip()
 
             normalized.append(clean_record)
 
         return normalized
-    
 
     def parse(self):
-        """
-        Execute the full parsing process from loading the JSON file to saving the output records.
+        """Execute the full parsing process from loading
+            the JSON file to saving the output records.
         """
         blocks = self.load_blocks(self.input_file)
         ordered_blocks = self.sort_blocks(blocks)
@@ -386,6 +395,7 @@ class Parser:
         records = self.build_records(b1_lines)
         records = self.normalize_records(records)
         self.save_output(records)
+
 
 if __name__ == "__main__":
     parser = Parser(input_file_name="BUL_EM_TM_2024000001_001.json")
