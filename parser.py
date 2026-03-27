@@ -398,5 +398,5 @@ class Parser:
 
 
 if __name__ == "__main__":
-    parser = Parser(input_file_name="BUL_EM_TM_2024000001_001.json")
+    parser = Parser(input_file_name="BUL_EM_TM_2024000007_001.json")
     parser.parse()
